@@ -7,7 +7,7 @@ const app = express();
 
 // 1. SERVE THE FRONTEND
 // This tells Node to look into the 'public' folder for index.html
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'Public'))); 
 app.use(express.json());
 
 // 2. DATABASE CONNECTION
@@ -24,7 +24,7 @@ const pool = new Pool({
 // ==========================================
 // FORCE THE SERVER TO SHOW THE WEBSITE ON THE MAIN PAGE
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
 // Get List of Products
 app.get('/api/products', async (req, res) => {
