@@ -7,7 +7,7 @@ const app = express();
 
 // 1. SERVE THE FRONTEND
 // This tells Node to look into the 'public' folder for index.html
-app.use(express.static('public')); 
+app.use(express.static(path.join(__dirname, 'public'))); 
 app.use(express.json());
 
 // 2. DATABASE CONNECTION
