@@ -3,112 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozy Cover - Admin Dashboard</title>
+    <title>Cozy Cover - Admin Command Center</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #f4f6f8; 
-            color: #333; 
-            margin: 0;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f6f8; color: #333; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #2c3e50; color: white; padding: 15px 30px; border-radius: 8px; margin-bottom: 20px; }
+        .header-purple { background: #8e44ad; margin-top: 40px; }
         h1 { margin: 0; font-size: 1.5em; letter-spacing: 1px; }
-        .refresh-btn {
-            background: #27ae60; color: white; border: none; padding: 10px 20px; 
-            border-radius: 5px; cursor: pointer; font-weight: bold;
-        }
+        .refresh-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .refresh-btn:hover { background: #2ecc71; }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #ecf0f1; font-weight: bold; color: #2c3e50; }
         tr:hover { background-color: #f9f9f9; }
-        .status-badge {
-            background: #f1c40f; color: #fff; padding: 5px 10px; 
-            border-radius: 20px; font-size: 0.8em; font-weight: bold;
-        }
+        .status-badge { background: #f1c40f; color: #fff; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
         .price { font-family: monospace; font-weight: bold; color: #27ae60; font-size: 1.1em; }
+        .vol-input { width: 60px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+        .save-btn { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .save-btn:hover { background: #2980b9; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>📦 Ajmani Admin Ledger</h1>
+        <h1>📦 Master Order Ledger</h1>
         <button class="refresh-btn" onclick="fetchOrders()">🔄 Refresh Data</button>
     </div>
-
     <table>
         <thead>
-            <tr>
-                <th>Order #</th>
-                <th>Date & Time</th>
-                <th>Customer</th>
-                <th>Product Locked</th>
-                <th>Qty</th>
-                <th>Locked Price</th>
-                <th>Status</th>
-            </tr>
+            <tr><th>Order #</th><th>Date & Time</th><th>Customer</th><th>Product Locked</th><th>Qty</th><th>Locked Price</th><th>Status</th></tr>
         </thead>
-        <tbody id="order-table-body">
-            <tr><td colspan="7" style="text-align:center;">Loading orders...</td></tr>
-        </tbody>
+        <tbody id="order-table-body"><tr><td colspan="7" style="text-align:center;">Loading orders...</td></tr></tbody>
+    </table>
+
+    <div class="header header-purple">
+        <h1>🎛️ Market Controls (Volatility)</h1>
+    </div>
+    <table>
+        <thead>
+            <tr><th>SKU</th><th>Product Name</th><th>Live Price</th><th>Volatility (1.0 = Normal)</th><th>Action</th></tr>
+        </thead>
+        <tbody id="product-table-body"><tr><td colspan="5" style="text-align:center;">Loading products...</td></tr></tbody>
     </table>
 
     <script>
+        // Load Orders
         async function fetchOrders() {
             try {
                 const response = await fetch('/api/admin/orders');
                 const orders = await response.json();
-                
                 const tbody = document.getElementById('order-table-body');
-                tbody.innerHTML = ''; // Clear loading text
+                tbody.innerHTML = ''; 
 
-                if (orders.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders yet.</td></tr>';
-                    return;
-                }
+                if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders yet.</td></tr>'; return; }
 
                 orders.forEach(order => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><strong>#${order.order_id}</strong></td>
-                        <td>${order.order_date}</td>
-                        <td>${order.customer}</td>
-                        <td>${order.product_name}</td>
-                        <td>${order.quantity}</td>
-                        <td class="price">₹${order.sold_at_price}</td>
+                    tbody.innerHTML += `<tr>
+                        <td><strong>#${order.order_id}</strong></td><td>${order.order_date}</td><td>${order.customer}</td>
+                        <td>${order.product_name}</td><td>${order.quantity}</td><td class="price">₹${order.sold_at_price}</td>
                         <td><span class="status-badge">${order.status}</span></td>
-                    `;
-                    tbody.appendChild(row);
+                    </tr>`;
                 });
-            } catch (err) {
-                console.error("Failed to load orders:", err);
-                document.getElementById('order-table-body').innerHTML = 
-                    '<tr><td colspan="7" style="text-align:center; color:red;">Error loading data.</td></tr>';
-            }
+            } catch (err) { console.error(err); }
         }
 
-        // Load orders immediately when the page opens
+        // Load Products & Volatility
+        async function fetchProducts() {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                const tbody = document.getElementById('product-table-body');
+                tbody.innerHTML = '';
+
+                products.forEach(product => {
+                    tbody.innerHTML += `<tr>
+                        <td>${product.sku}</td>
+                        <td><strong>${product.name}</strong></td>
+                        <td class="price">₹${product.current_price}</td>
+                        <td><input type="number" id="vol-${product.id}" class="vol-input" value="${product.volatility_index}" step="0.1" min="0"></td>
+                        <td><button class="save-btn" onclick="updateVolatility(${product.id})">Save</button></td>
+                    </tr>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        // Save New Volatility to Database
+        async function updateVolatility(id) {
+            const newVol = document.getElementById(`vol-${id}`).value;
+            try {
+                const response = await fetch('/api/admin/volatility', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id, volatility: newVol })
+                });
+                const result = await response.json();
+                if(result.success) {
+                    alert('✅ Market updated! The bot will now use the new volatility.');
+                } else {
+                    alert('❌ Failed to update.');
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // Run on start
         fetchOrders();
-        
-        // Auto-refresh every 10 seconds to catch live market drops
+        fetchProducts();
         setInterval(fetchOrders, 10000); 
     </script>
 </body>

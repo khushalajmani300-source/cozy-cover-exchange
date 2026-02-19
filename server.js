@@ -6,38 +6,35 @@ const path = require('path');
 const app = express();
 
 // 1. SERVE THE FRONTEND
-// This tells Node to look into the 'public' folder for index.html
-app.use(express.static(path.join(__dirname, 'Public'))); 
+app.use(express.static('Public')); 
 app.use(express.json());
 
 // 2. DATABASE CONNECTION
-// On Render, we will use a Connection String (URL) instead of separate variables
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false // Required for most cloud DB providers like Render
-  }
+  ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
 // 3. API ENDPOINTS
 // ==========================================
-// FORCE THE SERVER TO SHOW THE WEBSITE ON THE MAIN PAGE
+
+// Serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'index.html'));
 });
+
 // Get List of Products
 app.get('/api/products', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM products ORDER BY id ASC');
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
         res.status(500).send('Server Error');
     }
 });
 
-// Get Price History for Graphs
+// Get Price History
 app.get('/api/history/:id', async (req, res) => {
     try {
         const { id } = req.params;
@@ -47,39 +44,12 @@ app.get('/api/history/:id', async (req, res) => {
         );
         res.json(result.rows.reverse());
     } catch (err) {
-        console.error(err);
         res.status(500).send('Server Error');
     }
 });
 
 // BUY NOW (Transaction)
 app.post('/api/orders', async (req, res) => {
-// Endpoint D: ADMIN ONLY - Get All Orders
-app.get('/api/admin/orders', async (req, res) => {
-    try {
-        const query = `
-            SELECT 
-                o.id AS order_id,
-                u.full_name AS customer,
-                p.name AS product_name,
-                oi.quantity,
-                oi.sold_at_price,
-                o.total_amount,
-                o.status,
-                TO_CHAR(o.created_at, 'DD Mon YYYY, HH:MI AM') as order_date
-            FROM orders o
-            JOIN users u ON o.user_id = u.id
-            JOIN order_items oi ON o.id = oi.order_id
-            JOIN products p ON oi.product_id = p.id
-            ORDER BY o.created_at DESC;
-        `;
-        const result = await pool.query(query);
-        res.json(result.rows);
-    } catch (err) {
-        console.error("Admin API Error:", err);
-        res.status(500).send('Server Error');
-    }
-});
     const client = await pool.connect();
     try {
         const { product_id, quantity, locked_price } = req.body;
@@ -100,10 +70,41 @@ app.get('/api/admin/orders', async (req, res) => {
         res.json({ success: true, orderId: orderId });
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error(err);
         res.status(500).json({ success: false });
     } finally {
         client.release();
+    }
+});
+
+// ADMIN ONLY - Get All Orders
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const query = `
+            SELECT o.id AS order_id, u.full_name AS customer, p.name AS product_name,
+                   oi.quantity, oi.sold_at_price, o.total_amount, o.status,
+                   TO_CHAR(o.created_at, 'DD Mon YYYY, HH:MI AM') as order_date
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            JOIN order_items oi ON o.id = oi.order_id
+            JOIN products p ON oi.product_id = p.id
+            ORDER BY o.created_at DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+// ADMIN ONLY - Update Volatility
+app.post('/api/admin/volatility', async (req, res) => {
+    try {
+        const { id, volatility } = req.body;
+        await pool.query('UPDATE products SET volatility_index = $1 WHERE id = $2', [volatility, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
     }
 });
 
@@ -116,7 +117,11 @@ async function updatePrices() {
         const res = await client.query('SELECT * FROM products WHERE is_active = TRUE');
         for (let product of res.rows) {
              const direction = Math.random() >= 0.5 ? 1 : -1; 
-             const percentChange = (Math.random() * 0.05) + 0.01; 
+             const baseChange = (Math.random() * 0.05) + 0.01; 
+             
+             // Multiply by your custom Volatility Index!
+             const percentChange = baseChange * Number(product.volatility_index); 
+             
              let newPrice = Number(product.current_price) + (Number(product.current_price) * percentChange * direction);
 
              if (newPrice < Number(product.floor_price)) newPrice = Number(product.floor_price);
