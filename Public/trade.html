@@ -5,22 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cozy Cover B2B Exchange</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         /* BASE THEME */
         :root {
             --bg-color: #0b0e14;
             --card-bg: #151a22;
-            --primary: #8e44ad; /* Ajmani Purple */
-            --success: #00e676; /* Trading Green */
-            --danger: #ff1744;  /* Trading Red */
+            --primary: #8e44ad; 
+            --success: #00e676; 
+            --danger: #ff1744;  
             --text-main: #ffffff;
             --text-muted: #8b9eb7;
             --border-color: #2b3544;
         }
 
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: var(--bg-color); 
             color: var(--text-main); 
             margin: 0; 
@@ -30,21 +29,17 @@
 
         /* NAVBAR */
         .navbar {
-            background-color: rgba(21, 26, 34, 0.9);
-            backdrop-filter: blur(10px);
+            background-color: rgba(21, 26, 34, 0.95);
             border-bottom: 1px solid var(--border-color);
             padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
-        .brand { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .brand { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--text-main); }
         .brand-accent { color: var(--primary); }
-        .status-dot { height: 10px; width: 10px; background-color: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 10px var(--success); animation: pulse 2s infinite; }
-        .logout-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .status-dot { height: 10px; width: 10px; background-color: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--success); }
+        .logout-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
         .logout-btn:hover { color: #fff; border-color: #fff; }
 
         /* HEADER */
@@ -66,53 +61,246 @@
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
         }
-        .card:hover { transform: translateY(-5px); border-color: var(--text-muted); }
-        .card h3 { margin: 0 0 15px 0; font-size: 18px; font-weight: 600; color: #f1f5f9; line-height: 1.3; }
+        .card h3 { margin: 0 0 15px 0; font-size: 18px; color: #fff; }
         
         /* PRICE SECTION */
         .price-container {
             background: #0f131a;
-            border-radius: 10px;
+            border-radius: 8px;
             padding: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border: 1px solid #1f2733;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background-color 0.3s;
         }
-        .mrp-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .mrp-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
         .mrp-value { font-size: 14px; color: #556b82; text-decoration: line-through; }
-        .live-label { font-size: 12px; color: var(--success); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600;}
-        .price { font-size: 32px; font-weight: 800; font-family: monospace; color: var(--text-main); margin: 0;}
+        .live-label { font-size: 12px; color: var(--success); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;}
+        .price { font-size: 28px; font-weight: bold; font-family: monospace; color: #fff; margin: 0;}
 
         /* FLASH ANIMATIONS */
-        @keyframes flashGreen { 0% { background-color: rgba(0, 230, 118, 0.2); } 100% { background-color: #0f131a; } }
-        @keyframes flashRed { 0% { background-color: rgba(255, 23, 68, 0.2); } 100% { background-color: #0f131a; } }
+        @keyframes flashGreen { 0% { background-color: rgba(0, 230, 118, 0.3); } 100% { background-color: #0f131a; } }
+        @keyframes flashRed { 0% { background-color: rgba(255, 23, 68, 0.3); } 100% { background-color: #0f131a; } }
         .flash-up { animation: flashGreen 1s ease-out; }
         .flash-down { animation: flashRed 1s ease-out; }
 
         /* CHARTS */
-        .chart-wrapper { height: 160px; width: 100%; margin-bottom: 25px; }
+        .chart-wrapper { height: 150px; width: 100%; margin-bottom: 20px; }
 
         /* ACTIONS */
-        .action-row { display: flex; gap: 12px; margin-top: auto; }
+        .action-row { display: flex; gap: 10px; margin-top: auto; }
         .qty-input { 
-            width: 70px; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); 
+            width: 70px; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); 
             background: #0f131a; color: white; text-align: center; font-size: 16px; font-weight: bold;
-            outline: none; transition: border-color 0.2s;
         }
-        .qty-input:focus { border-color: var(--primary); }
         .buy-btn { 
             flex: 1; background: var(--primary); color: white; border: none; 
-            padding: 12px; cursor: pointer; font-size: 16px; font-weight: 800; letter-spacing: 1px; 
-            border-radius: 8px; transition: all 0.2s ease;
+            padding: 12px; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 6px;
         }
-        .buy-btn:hover { background: #732d91; box-shadow: 0 0 15px rgba(142, 68, 1
+        .buy-btn:hover { background: #732d91; }
+    </style>
+</head>
+<body>
+
+    <script>
+        if(localStorage.getItem('dealer_access') !== 'granted') {
+            window.location.href = '/'; 
+        }
+        function logout() {
+            localStorage.removeItem('dealer_access');
+            window.location.href = '/';
+        }
+    </script>
+
+    <nav class="navbar">
+        <div class="brand">
+            <span class="brand-accent">AJMANI</span> B2B EXCHANGE
+        </div>
+        <div style="display:flex; align-items:center; gap: 15px;">
+            <span style="font-size: 13px; color: var(--text-muted);">
+                <span class="status-dot"></span> MARKET OPEN
+            </span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <header class="page-header">
+        <h1>Cozy Cover Trading Floor</h1>
+        <p>Live fluctuating wholesale rates. Lock in your bulk orders below.</p>
+    </header>
+
+    <div id="market" class="container">
+        <h2 style='color:#8b9eb7; text-align:center; width:100%;'>Syncing with Market...</h2>
+    </div>
+
+    <script>
+        const charts = {};
+        const previousPrices = {}; 
+
+        async function initMarket() {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+                const marketDiv = document.getElementById('market');
+                marketDiv.innerHTML = ''; 
+
+                products.forEach(product => {
+                    previousPrices[product.id] = parseFloat(product.current_price); 
+
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3>${product.name}</h3>
+                        <div class="price-container" id="price-box-${product.id}">
+                            <div>
+                                <div class="mrp-label">Max Retail Price</div>
+                                <div class="mrp-value">₹${product.mrp}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="live-label" id="trend-label-${product.id}">LIVE RATE</div>
+                                <div class="price" id="price-${product.id}">₹${product.current_price}</div>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="chart-${product.id}"></canvas>
+                        </div>
+                        <div class="action-row">
+                            <input type="number" id="qty-${product.id}" class="qty-input" value="1" min="1" title="Order Quantity (Bales)">
+                            <button class="buy-btn" onclick="buyProduct(${product.id}, '${product.name.replace(/'/g, "\\'")}')">LOCK PRICE</button>
+                        </div>
+                    `;
+                    marketDiv.appendChild(card);
+
+                    // Initialize the graph safely
+                    const canvas = document.getElementById(`chart-${product.id}`);
+                    if (canvas) {
+                        const ctx = canvas.getContext('2d');
+                        charts[product.id] = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: [], 
+                                datasets: [{
+                                    label: 'History', data: [], borderColor: '#8e44ad', borderWidth: 2, 
+                                    pointRadius: 0, tension: 0.4, fill: true, backgroundColor: 'rgba(142, 68, 173, 0.1)'
+                                }]
+                            },
+                            options: {
+                                responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                                scales: { x: { display: false }, y: { display: true, grid: { color: '#1f2733' }, ticks: { color: '#8b9eb7' } } },
+                                animation: false
+                            }
+                        });
+                    }
+                });
+
+                // Start updating prices every 4 seconds
+                setInterval(updateData, 4000);
+            } catch (err) {
+                console.error("Initialization error:", err);
+                document.getElementById('market').innerHTML = "<h2 style='color:#ff1744; text-align:center; width:100%;'>❌ Connection to Exchange Failed.</h2>";
+            }
+        }
+
+        async function updateData() {
+            try {
+                const response = await fetch('/api/products');
+                const products = await response.json();
+
+                for (let product of products) {
+                    const priceElement = document.getElementById(`price-${product.id}`);
+                    const boxElement = document.getElementById(`price-box-${product.id}`);
+                    const trendLabel = document.getElementById(`trend-label-${product.id}`);
+                    
+                    if (!priceElement || !boxElement || !trendLabel) continue; // Safety check
+
+                    const newPrice = parseFloat(product.current_price);
+                    priceElement.innerText = `₹${newPrice}`;
+
+                    // Trigger Flash Animation
+                    if (newPrice !== previousPrices[product.id]) {
+                        boxElement.classList.remove('flash-up', 'flash-down');
+                        
+                        // Force browser to restart animation
+                        void boxElement.offsetWidth; 
+                        
+                        if (newPrice > previousPrices[product.id]) {
+                            boxElement.classList.add('flash-down'); // Price UP (Red)
+                            trendLabel.style.color = '#ff1744';
+                        } else {
+                            boxElement.classList.add('flash-up'); // Price DOWN (Green)
+                            trendLabel.style.color = '#00e676';
+                        }
+                        previousPrices[product.id] = newPrice;
+                    }
+
+                    // Update Chart
+                    const historyRes = await fetch(`/api/history/${product.id}`);
+                    const history = await historyRes.json();
+
+                    const chart = charts[product.id];
+                    if (chart && history.length > 0) {
+                        chart.data.labels = history.map(h => h.recorded_at); 
+                        chart.data.datasets[0].data = history.map(h => h.new_price); 
+                        
+                        const currentPrice = history[history.length - 1].new_price;
+                        const prevPrice = history.length > 1 ? history[history.length - 2].new_price : currentPrice;
+                        
+                        const color = currentPrice <= prevPrice ? '#00e676' : '#ff1744'; 
+                        chart.data.datasets[0].borderColor = color;
+                        chart.data.datasets[0].backgroundColor = currentPrice <= prevPrice ? 'rgba(0, 230, 118, 0.1)' : 'rgba(255, 23, 68, 0.1)';
+                        
+                        chart.update();
+                    }
+                }
+            } catch (err) {
+                console.error("Update error:", err);
+            }
+        }
+
+        async function buyProduct(id, name) {
+            const priceText = document.getElementById(`price-${id}`).innerText;
+            const cleanPrice = parseFloat(priceText.replace('₹', '')); 
+            const qtyInput = document.getElementById(`qty-${id}`).value;
+            const quantity = parseInt(qtyInput);
+
+            if (quantity < 1 || isNaN(quantity)) {
+                alert("Please enter a valid bulk quantity.");
+                return;
+            }
+
+            const totalValue = cleanPrice * quantity;
+
+            if(!confirm(`B2B ORDER CONFIRMATION:\n\nProduct: ${name}\nQuantity: ${quantity} units\nLocked Rate: ₹${cleanPrice}\n\nTOTAL VALUE: ₹${totalValue.toLocaleString('en-IN')}\n\nProceed to lock?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: id, quantity: quantity, locked_price: cleanPrice })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ ORDER LOCKED! Order #${result.orderId} generated.\n\nOur logistics team in Wadki has been notified.`);
+                } else {
+                    alert("❌ Order Failed. Please try again.");
+                }
+            } catch (err) {
+                alert("Server Error. Check your connection.");
+            }
+        }
+
+        initMarket();
+    </script>
+</body>
+</html>
