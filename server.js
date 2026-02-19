@@ -107,7 +107,17 @@ app.post('/api/admin/volatility', async (req, res) => {
         res.status(500).json({ success: false });
     }
 });
-
+// ADMIN ONLY - Update Order Status
+app.post('/api/admin/order-status', async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        await pool.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false });
+    }
+});
 // ==========================================
 // 4. THE TRADING BOT ENGINE
 // ==========================================

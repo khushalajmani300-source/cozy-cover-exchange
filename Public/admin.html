@@ -15,24 +15,36 @@
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
         th { background-color: #ecf0f1; font-weight: bold; color: #2c3e50; }
         tr:hover { background-color: #f9f9f9; }
-        .status-badge { background: #f1c40f; color: #fff; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
+        /* Status Badges */
+        .badge-confirmed { background: #e74c3c; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .badge-packed { background: #f39c12; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .badge-dispatched { background: #27ae60; color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        
         .price { font-family: monospace; font-weight: bold; color: #27ae60; font-size: 1.1em; }
+        
+        /* Action Buttons */
+        .action-btn { border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.9em; transition: 0.2s; color: white;}
+        .btn-pack { background: #f39c12; }
+        .btn-pack:hover { background: #d68910; }
+        .btn-dispatch { background: #2980b9; }
+        .btn-dispatch:hover { background: #2471a3; }
+        
         .vol-input { width: 60px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
         .save-btn { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-        .save-btn:hover { background: #2980b9; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>📦 Master Order Ledger</h1>
+        <h1>📦 Master Order Ledger & Logistics</h1>
         <button class="refresh-btn" onclick="fetchOrders()">🔄 Refresh Data</button>
     </div>
     <table>
         <thead>
-            <tr><th>Order #</th><th>Date & Time</th><th>Customer</th><th>Product Locked</th><th>Qty</th><th>Locked Price</th><th>Status</th></tr>
+            <tr><th>Order #</th><th>Date & Time</th><th>Customer</th><th>Product Locked</th><th>Qty</th><th>Total Bill</th><th>Status</th><th>Logistics Action</th></tr>
         </thead>
-        <tbody id="order-table-body"><tr><td colspan="7" style="text-align:center;">Loading orders...</td></tr></tbody>
+        <tbody id="order-table-body"><tr><td colspan="8" style="text-align:center;">Loading orders...</td></tr></tbody>
     </table>
 
     <div class="header header-purple">
@@ -54,15 +66,50 @@
                 const tbody = document.getElementById('order-table-body');
                 tbody.innerHTML = ''; 
 
-                if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No orders yet.</td></tr>'; return; }
+                if (orders.length === 0) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No orders yet.</td></tr>'; return; }
 
                 orders.forEach(order => {
+                    // Determine Badge Color
+                    let badgeClass = 'badge-confirmed';
+                    if (order.status === 'PACKED') badgeClass = 'badge-packed';
+                    if (order.status === 'DISPATCHED') badgeClass = 'badge-dispatched';
+
+                    // Determine which button to show
+                    let actionButton = '-';
+                    if (order.status === 'CONFIRMED') {
+                        actionButton = `<button class="action-btn btn-pack" onclick="updateStatus(${order.order_id}, 'PACKED')">📦 Pack at Wadki</button>`;
+                    } else if (order.status === 'PACKED') {
+                        actionButton = `<button class="action-btn btn-dispatch" onclick="updateStatus(${order.order_id}, 'DISPATCHED')">🚚 Dispatch (Raviwar Peth)</button>`;
+                    } else if (order.status === 'DISPATCHED') {
+                        actionButton = `✅ Complete`;
+                    }
+
                     tbody.innerHTML += `<tr>
                         <td><strong>#${order.order_id}</strong></td><td>${order.order_date}</td><td>${order.customer}</td>
-                        <td>${order.product_name}</td><td>${order.quantity}</td><td class="price">₹${order.sold_at_price}</td>
-                        <td><span class="status-badge">${order.status}</span></td>
+                        <td>${order.product_name}</td><td>${order.quantity}</td><td class="price">₹${order.total_amount}</td>
+                        <td><span class="${badgeClass}">${order.status}</span></td>
+                        <td>${actionButton}</td>
                     </tr>`;
                 });
+            } catch (err) { console.error(err); }
+        }
+
+        // Change Order Status
+        async function updateStatus(orderId, newStatus) {
+            if(!confirm(`Mark Order #${orderId} as ${newStatus}?`)) return;
+
+            try {
+                const response = await fetch('/api/admin/order-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: orderId, status: newStatus })
+                });
+                const result = await response.json();
+                if(result.success) {
+                    fetchOrders(); // Reload the table instantly
+                } else {
+                    alert('❌ Failed to update status.');
+                }
             } catch (err) { console.error(err); }
         }
 
@@ -76,9 +123,7 @@
 
                 products.forEach(product => {
                     tbody.innerHTML += `<tr>
-                        <td>${product.sku}</td>
-                        <td><strong>${product.name}</strong></td>
-                        <td class="price">₹${product.current_price}</td>
+                        <td>${product.sku}</td><td><strong>${product.name}</strong></td><td class="price">₹${product.current_price}</td>
                         <td><input type="number" id="vol-${product.id}" class="vol-input" value="${product.volatility_index}" step="0.1" min="0"></td>
                         <td><button class="save-btn" onclick="updateVolatility(${product.id})">Save</button></td>
                     </tr>`;
@@ -86,21 +131,12 @@
             } catch (err) { console.error(err); }
         }
 
-        // Save New Volatility to Database
         async function updateVolatility(id) {
             const newVol = document.getElementById(`vol-${id}`).value;
             try {
-                const response = await fetch('/api/admin/volatility', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id, volatility: newVol })
-                });
+                const response = await fetch('/api/admin/volatility', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id, volatility: newVol }) });
                 const result = await response.json();
-                if(result.success) {
-                    alert('✅ Market updated! The bot will now use the new volatility.');
-                } else {
-                    alert('❌ Failed to update.');
-                }
+                if(result.success) alert('✅ Market updated!');
             } catch (err) { console.error(err); }
         }
 
