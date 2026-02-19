@@ -54,6 +54,32 @@ app.get('/api/history/:id', async (req, res) => {
 
 // BUY NOW (Transaction)
 app.post('/api/orders', async (req, res) => {
+// Endpoint D: ADMIN ONLY - Get All Orders
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                o.id AS order_id,
+                u.full_name AS customer,
+                p.name AS product_name,
+                oi.quantity,
+                oi.sold_at_price,
+                o.total_amount,
+                o.status,
+                TO_CHAR(o.created_at, 'DD Mon YYYY, HH:MI AM') as order_date
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            JOIN order_items oi ON o.id = oi.order_id
+            JOIN products p ON oi.product_id = p.id
+            ORDER BY o.created_at DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Admin API Error:", err);
+        res.status(500).send('Server Error');
+    }
+});
     const client = await pool.connect();
     try {
         const { product_id, quantity, locked_price } = req.body;
