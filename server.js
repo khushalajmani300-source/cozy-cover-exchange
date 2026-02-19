@@ -22,7 +22,10 @@ const pool = new Pool({
 // ==========================================
 // 3. API ENDPOINTS
 // ==========================================
-
+// FORCE THE SERVER TO SHOW THE WEBSITE ON THE MAIN PAGE
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 // Get List of Products
 app.get('/api/products', async (req, res) => {
     try {
