@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 
 // 1. SERVE THE FRONTEND
-app.use(express.static('Public')); 
+app.use(express.static('public')); 
 app.use(express.json());
 
 // 2. DATABASE CONNECTION
@@ -21,7 +21,7 @@ const pool = new Pool({
 
 // Serve the main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'Public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // DEALER LOGIN SYSTEM
