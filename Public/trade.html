@@ -41,7 +41,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 30px; background: #2a2a35; border-radius: 8px; overflow: hidden; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid #3a3a45; }
         th { background: #222; color: #888; font-size: 0.85rem; text-transform: uppercase; }
-        .btn-buy { background: #007bff; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
+        .btn-buy { background: #007bff; color: white; border: none; padding: 8px 16px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
+        .btn-buy:hover { background: #0056b3; }
     </style>
 </head>
 <body>
@@ -66,7 +67,7 @@
             <thead>
                 <tr>
                     <th>Product</th>
-                    <th>Wholesale Rate (INR)</th>
+                    <th>Live Wholesale Rate (INR)</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -82,62 +83,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
-            // 🛑 IMPORTANT: Change this URL to your actual Render backend API route!
-            // Example: '/api/rates' or '/products' or whatever route sends your JSON data
-            const apiUrl = '/api/rates'; 
-
-            // 1. Tell the browser to go fetch the data
-            fetch(apiUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Server responded with an error');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // 2. The data arrived successfully! Hide the loading text.
-                    document.getElementById('loading-text').style.display = 'none';
-                    
-                    // 3. Unhide the table container so the user can see it
-                    document.getElementById('market-container').style.display = 'block';
-
-                    // 4. Inject the data into the HTML table
-                    const tbody = document.getElementById('market-data-body');
-                    
-                    // If database is empty
-                    if (!data || data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No active listings found on the floor today.</td></tr>';
-                        return;
-                    }
-
-                    // Loop through the data and create a row for each textile product
-                    data.forEach(item => {
-                        const row = document.createElement('tr');
-                        
-                        // Adjust 'item.name' and 'item.price' to match your database column names
-                        row.innerHTML = `
-                            <td><strong>${item.name || 'Textile Item'}</strong></td>
-                            <td style="color: #28a745; font-weight: bold;">₹${item.price || '0.00'}</td>
-                            <td><button class="btn-buy">Buy Bulk</button></td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    // If the backend fails, change the loading text to a red error message
-                    console.error('Fetch error:', error);
-                    const loadingElement = document.getElementById('loading-text');
-                    loadingElement.innerText = 'ERROR: Could not connect to the trading floor API.';
-                    loadingElement.style.color = '#ff4c4c'; 
-                });
-        });
-    </script>
-<script>
-        document.addEventListener('DOMContentLoaded', () => {
-            
-            // The exact route from your backend!
             const apiUrl = '/api/products'; 
 
+            // Function to fetch and display the live rates
             function fetchMarketData() {
                 fetch(apiUrl)
                     .then(response => {
@@ -145,14 +93,12 @@
                         return response.json();
                     })
                     .then(data => {
-                        // 1. Hide loading text, show the container
+                        // Hide loading text, show the container
                         document.getElementById('loading-text').style.display = 'none';
                         document.getElementById('market-container').style.display = 'block';
 
-                        // 2. Grab the table body
+                        // Grab the table body and clear old rows
                         const tbody = document.getElementById('market-data-body');
-                        
-                        // Clear the old rows before adding the new ones
                         tbody.innerHTML = ''; 
 
                         if (!data || data.length === 0) {
@@ -160,11 +106,10 @@
                             return;
                         }
 
-                        // 3. Inject the live data
+                        // Inject the live data
                         data.forEach(item => {
                             const row = document.createElement('tr');
                             
-                            // Using the exact column names from your database logic
                             row.innerHTML = `
                                 <td><strong>${item.name || 'Textile Item'}</strong></td>
                                 <td style="color: #28a745; font-weight: bold; font-size: 1.1rem;">
@@ -190,16 +135,63 @@
                     });
             }
 
-            // Fetch immediately when the page loads
+            // Fetch immediately when the page loads, then every 4 seconds
             fetchMarketData();
-
-            // Fetch repeatedly every 4 seconds to match your Trading Bot!
             setInterval(fetchMarketData, 4000);
         });
 
-        // Placeholder function for when you click "Lock Rate & Buy"
-        function buyProduct(productId, lockedPrice) {
-            alert(`Ready to buy Product ID: ${productId} at the locked rate of ₹${lockedPrice}. (Linking to checkout next!)`);
+        // -----------------------------------------
+        // TRANSACTION FUNCTION: Locks in the order
+        // -----------------------------------------
+        async function buyProduct(productId, lockedPrice) {
+            // Ask the buyer for their bulk quantity
+            const quantityInput = prompt(`Locking in rate: ₹${lockedPrice}\n\nEnter the bulk quantity you wish to order:`, "100");
+            
+            // If they click 'Cancel' on the prompt, stop the function
+            if (!quantityInput) return; 
+
+            // Convert their input to a proper number
+            const quantity = parseInt(quantityInput, 10);
+            
+            if (isNaN(quantity) || quantity <= 0) {
+                alert("❌ Invalid quantity. Please enter a valid number.");
+                return;
+            }
+
+            // Get the logged-in User ID (Defaults to 1 for testing if not logged in)
+            const storedUserId = localStorage.getItem('user_id') || 1; 
+
+            // Send the secure POST request to the backend database
+            try {
+                console.log("Processing transaction...");
+
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: storedUserId,
+                        product_id: productId,
+                        quantity: quantity,
+                        locked_price: lockedPrice
+                    })
+                });
+
+                const result = await response.json();
+
+                // Handle the server's response
+                if (result.success) {
+                    const totalCost = (lockedPrice * quantity).toLocaleString('en-IN');
+                    alert(`✅ ORDER CONFIRMED!\n\nOrder ID: #${result.orderId}\nQuantity: ${quantity}\nLocked Rate: ₹${lockedPrice}\nTotal: ₹${totalCost}`);
+                } else {
+                    alert("❌ Transaction Failed. Please try again or contact support.");
+                }
+
+            } catch (error) {
+                console.error('Checkout error:', error);
+                alert("❌ Network error. Could not reach the trading floor servers.");
+            }
         }
     </script>
 </body>
