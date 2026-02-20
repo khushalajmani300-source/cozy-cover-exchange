@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 
-// 1. SERVE THE FRONTEND (Fixed to lowercase 'public')
+// 1. SERVE THE FRONTEND
 app.use(express.static('public')); 
 app.use(express.json());
 
@@ -19,7 +19,7 @@ const pool = new Pool({
 // 3. API ENDPOINTS
 // ==========================================
 
-// Serve the main page (Fixed to lowercase 'public')
+// Serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -156,4 +156,24 @@ async function updatePrices() {
              if (newPrice < Number(product.floor_price)) newPrice = Number(product.floor_price);
              if (newPrice > Number(product.ceiling_price)) newPrice = Number(product.ceiling_price);
 
-             newPrice = Math.round(newPrice / 1
+             newPrice = Math.round(newPrice / 10) * 10;
+
+             if (newPrice !== Number(product.current_price)) {
+                 await client.query('UPDATE products SET current_price = $1 WHERE id = $2', [newPrice, product.id]);
+                 await client.query('INSERT INTO price_history (product_id, new_price) VALUES ($1, $2)', [product.id, newPrice]);
+             }
+        }
+    } catch (err) {
+        console.error("Bot Error:", err);
+    } finally {
+        client.release();
+    }
+}
+
+setInterval(updatePrices, 4000);
+
+// 5. START SERVER
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
