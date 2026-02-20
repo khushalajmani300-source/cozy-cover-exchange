@@ -18,7 +18,24 @@ const pool = new Pool({
 // ==========================================
 // 3. API ENDPOINTS
 // ==========================================
-
+// DEALER LOGIN SYSTEM
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const result = await pool.query(
+            'SELECT id, full_name FROM users WHERE username = $1 AND password = $2', 
+            [username, password]
+        );
+        
+        if (result.rows.length > 0) {
+            res.json({ success: true, user: result.rows[0] });
+        } else {
+            res.json({ success: false, message: 'Invalid credentials' });
+        }
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
 // Serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'Public', 'index.html'));
