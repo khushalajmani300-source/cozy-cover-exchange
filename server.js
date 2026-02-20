@@ -91,4 +91,90 @@ app.post('/api/orders', async (req, res) => {
         res.json({ success: true, orderId: orderId });
     } catch (err) {
         console.error("Order Error:", err);
-        await client.query
+        await client.query('ROLLBACK');
+        res.status(500).json({ success: false });
+    } finally {
+        client.release();
+    }
+});
+
+// ADMIN ONLY - Get All Orders
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const query = `
+            SELECT o.id AS order_id, u.full_name AS customer, p.name AS product_name,
+                   oi.quantity, oi.sold_at_price, o.total_amount, o.status,
+                   TO_CHAR(o.created_at, 'DD Mon YYYY, HH:MI AM') as order_date
+            FROM orders o
+            JOIN users u ON o.user_id = u.id
+            JOIN order_items oi ON o.id = oi.order_id
+            JOIN products p ON oi.product_id = p.id
+            ORDER BY o.created_at DESC;
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+// ADMIN ONLY - Update Order Status
+app.post('/api/admin/order-status', async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        await pool.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// ADMIN ONLY - Update Volatility
+app.post('/api/admin/volatility', async (req, res) => {
+    try {
+        const { id, volatility } = req.body;
+        await pool.query('UPDATE products SET volatility_index = $1 WHERE id = $2', [volatility, id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// ==========================================
+// 4. THE TRADING BOT ENGINE
+// ==========================================
+async function updatePrices() {
+    const client = await pool.connect();
+    try {
+        const res = await client.query('SELECT * FROM products WHERE is_active = TRUE');
+        for (let product of res.rows) {
+             const direction = Math.random() >= 0.5 ? 1 : -1; 
+             const baseChange = (Math.random() * 0.05) + 0.01; 
+             const percentChange = baseChange * Number(product.volatility_index); 
+             
+             let newPrice = Number(product.current_price) + (Number(product.current_price) * percentChange * direction);
+
+             if (newPrice < Number(product.floor_price)) newPrice = Number(product.floor_price);
+             if (newPrice > Number(product.ceiling_price)) newPrice = Number(product.ceiling_price);
+
+             newPrice = Math.round(newPrice / 10) * 10;
+
+             if (newPrice !== Number(product.current_price)) {
+                 await client.query('UPDATE products SET current_price = $1 WHERE id = $2', [newPrice, product.id]);
+                 await client.query('INSERT INTO price_history (product_id, new_price) VALUES ($1, $2)', [product.id, newPrice]);
+             }
+        }
+    } catch (err) {
+        console.error("Bot Error:", err);
+    } finally {
+        client.release();
+    }
+}
+
+setInterval(updatePrices, 4000);
+
+// 5. START SERVER
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
