@@ -3,173 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cozy Cover B2B Exchange</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Ajmani B2B Exchange | Live Trading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* Dark Theme Styling matching your UI */
+        /* Bloomberg Terminal / Wall Street Dark Theme */
         body { 
-            background-color: #1e1e24; 
-            color: #ffffff; 
-            font-family: Arial, sans-serif; 
+            background-color: #0b0e14; /* Deep terminal black */
+            color: #c9d1d9; 
+            font-family: 'Rajdhani', sans-serif; 
             margin: 0; 
-            padding: 20px; 
+            padding: 0; 
         }
+
+        /* Top Ticker Tape */
+        .ticker-wrap {
+            width: 100%;
+            background-color: #161b22;
+            border-bottom: 1px solid #30363d;
+            overflow: hidden;
+            height: 30px;
+            display: flex;
+            align-items: center;
+        }
+        .ticker {
+            white-space: nowrap;
+            box-sizing: content-box;
+            animation: ticker 20s linear infinite;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            color: #8b949e;
+        }
+        @keyframes ticker {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
+        }
+        .ticker-item { margin-right: 50px; }
+
+        /* Main Layout */
+        .container { padding: 20px 40px; }
+
+        /* Header & Branding */
         .header { 
             display: flex; 
             justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid #333; 
+            align-items: flex-end; 
+            border-bottom: 2px solid #1f6feb; 
             padding-bottom: 15px; 
+            margin-bottom: 30px;
         }
-        .logo { font-weight: bold; font-size: 1.2rem; text-transform: uppercase; }
-        .logo span { color: #d63384; } /* Pink Accent */
-        .status-bar { display: flex; align-items: center; gap: 15px; }
-        .status { color: #28a745; font-size: 0.85rem; font-weight: bold; }
-        .btn-logout { 
-            background: #333; color: white; border: none; 
-            padding: 6px 12px; cursor: pointer; border-radius: 4px; 
+        .logo { 
+            font-weight: 700; 
+            font-size: 2rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            color: #ffffff;
         }
-        .center-title { text-align: center; margin-top: 50px; }
-        .center-title h1 { margin-bottom: 5px; font-size: 1.8rem; }
-        .subtitle { color: #aaa; font-size: 0.9rem; }
+        /* The Requested Blue Exchange Name */
+        .logo span { 
+            color: #38bdf8; 
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        } 
         
-        #loading-text { margin-top: 30px; font-size: 0.9rem; font-weight: bold; color: #ccc; }
+        .market-status {
+            text-align: right;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .status-indicator {
+            color: #3fb950;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 0 0 10px rgba(63, 185, 80, 0.5);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
         
-        /* Table Styling for Market Data */
-        table { width: 100%; border-collapse: collapse; margin-top: 30px; background: #2a2a35; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #3a3a45; }
-        th { background: #222; color: #888; font-size: 0.85rem; text-transform: uppercase; }
-        .btn-buy { background: #007bff; color: white; border: none; padding: 8px 16px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: background 0.2s; }
-        .btn-buy:hover { background: #0056b3; }
+        .title-block h1 { margin: 0; font-size: 1.5rem; color: #8b949e; text-transform: uppercase; }
+
+        /* The Data Table */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            background: #0d1117; 
+            border: 1px solid #30363d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        th, td { 
+            padding: 16px 20px; 
+            text-align: left; 
+            border-bottom: 1px solid #21262d; 
+        }
+        th { 
+            background: #161b22; 
+            color: #8b949e; 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        td { font-size: 1.1rem; }
+        
+        .product-name { font-weight: 700; color: #e6edf3; }
+        
+        /* Monospace for Wall Street Numbers */
+        .price-cell { 
+            font-family: 'Roboto Mono', monospace; 
+            font-weight: 700; 
+            font-size: 1.2rem;
+            transition: color 0.3s ease;
+        }
+
+        /* Buy Button */
+        .btn-buy { 
+            background: transparent; 
+            color: #38bdf8; 
+            border: 1px solid #38bdf8; 
+            padding: 8px 20px; 
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700; 
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+        }
+        .btn-buy:hover { 
+            background: #38bdf8; 
+            color: #0b0e14;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        /* Dynamic Flash Animations for Price Changes */
+        @keyframes flashGreen {
+            0% { background-color: rgba(63, 185, 80, 0.3); }
+            100% { background-color: transparent; }
+        }
+        @keyframes flashRed {
+            0% { background-color: rgba(248, 81, 73, 0.3); }
+            100% { background-color: transparent; }
+        }
+        .flash-up { animation: flashGreen 1s ease-out; color: #3fb950 !important; }
+        .flash-down { animation: flashRed 1s ease-out; color: #f85149 !important; }
+
+        #loading-text { text-align: center; margin-top: 50px; font-family: 'Roboto Mono', monospace; color: #8b949e; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo"><span>Ajmani</span> B2B Exchange</div>
-        <div class="status-bar">
-            <span class="status">🟢 MARKET OPEN</span>
-            <button class="btn-logout">Logout</button>
+    <div class="ticker-wrap">
+        <div class="ticker" id="ticker-content">
+            <span class="ticker-item">SYSTEM SECURE</span>
+            <span class="ticker-item">AWAITING MARKET DATA...</span>
         </div>
     </div>
 
-    <div class="center-title">
-        <h1>COZY COVER TRADING FLOOR</h1>
-        <p class="subtitle">Live fluctuating wholesale rates. Lock in your bulk orders below.</p>
-    </div>
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="logo">Ajmani <span>B2B Exchange</span></div>
+                <div class="title-block">
+                    <h1>Cozy Cover Trading Floor</h1>
+                </div>
+            </div>
+            <div class="market-status">
+                <div class="status-indicator">● LIVE MARKET OPEN</div>
+                <div style="font-size: 0.8rem; color: #8b949e; margin-top: 5px;" id="clock">00:00:00</div>
+            </div>
+        </div>
 
-    <div id="loading-text">LOADING MARKET DATA...</div>
+        <div id="loading-text">CONNECTING TO EXCHANGE SERVERS...</div>
 
-    <div id="market-container" style="display: none;">
-        <table>
-            <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Live Wholesale Rate (INR)</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="market-data-body">
-                </tbody>
-        </table>
-        
-        <div style="margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
-            <canvas id="priceChart"></canvas>
+        <div id="market-container" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Asset / Contract</th>
+                        <th>Live Spot Rate (INR)</th>
+                        <th>Trend</th>
+                        <th>Execution</th>
+                    </tr>
+                </thead>
+                <tbody id="market-data-body">
+                    </tbody>
+            </table>
         </div>
     </div>
 
     <script>
+        // Start the digital clock
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { hour12: false }) + ' IST';
+        }, 1000);
+
+        // Memory object to track price movements for flashing colors
+        let previousPrices = {};
+
         document.addEventListener('DOMContentLoaded', () => {
-            
             const apiUrl = '/api/products'; 
 
-            // Function to fetch and display the live rates
             function fetchMarketData() {
                 fetch(apiUrl)
                     .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
+                        if (!response.ok) throw new Error('Network error');
                         return response.json();
                     })
                     .then(data => {
-                        // Hide loading text, show the container
                         document.getElementById('loading-text').style.display = 'none';
                         document.getElementById('market-container').style.display = 'block';
 
-                        // Grab the table body and clear old rows
                         const tbody = document.getElementById('market-data-body');
                         tbody.innerHTML = ''; 
 
-                        if (!data || data.length === 0) {
-                            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No active listings found.</td></tr>';
-                            return;
-                        }
+                        let tickerHtml = '';
 
-                        // Inject the live data
                         data.forEach(item => {
-                            const row = document.createElement('tr');
+                            // Determine Price Movement (Up, Down, or Unchanged)
+                            let priceClass = '';
+                            let trendIcon = '−';
+                            let trendColor = '#8b949e';
+
+                            if (previousPrices[item.id]) {
+                                if (item.current_price > previousPrices[item.id]) {
+                                    priceClass = 'flash-up';
+                                    trendIcon = '▲';
+                                    trendColor = '#3fb950';
+                                } else if (item.current_price < previousPrices[item.id]) {
+                                    priceClass = 'flash-down';
+                                    trendIcon = '▼';
+                                    trendColor = '#f85149';
+                                }
+                            }
                             
+                            // Save current price for the next 4-second check
+                            previousPrices[item.id] = item.current_price;
+
+                            // Build Ticker Tape String
+                            tickerHtml += `<span class="ticker-item">${item.name.toUpperCase()}: ₹${item.current_price} ${trendIcon}</span>`;
+
+                            // Inject Row
+                            const row = document.createElement('tr');
+                            // Add the flash animation class directly to the row if price changed
+                            if(priceClass) row.classList.add(priceClass);
+
                             row.innerHTML = `
-                                <td><strong>${item.name || 'Textile Item'}</strong></td>
-                                <td style="color: #28a745; font-weight: bold; font-size: 1.1rem;">
-                                    ₹${item.current_price || '0.00'}
-                                </td>
+                                <td class="product-name">${item.name}</td>
+                                <td class="price-cell ${priceClass}">₹${parseFloat(item.current_price).toFixed(2)}</td>
+                                <td style="color: ${trendColor}; font-weight: bold;">${trendIcon}</td>
                                 <td>
                                     <button class="btn-buy" onclick="buyProduct(${item.id}, ${item.current_price})">
-                                        Lock Rate & Buy
+                                        Execute Block
                                     </button>
                                 </td>
                             `;
                             tbody.appendChild(row);
                         });
+
+                        // Update the scrolling ticker
+                        if(tickerHtml) {
+                            document.getElementById('ticker-content').innerHTML = tickerHtml + tickerHtml; // double it for smooth scrolling
+                        }
                     })
                     .catch(error => {
                         console.error('Fetch error:', error);
-                        // Only show error if the table is completely hidden (first load)
-                        if (document.getElementById('market-container').style.display === 'none') {
-                            const loadingElement = document.getElementById('loading-text');
-                            loadingElement.innerText = 'ERROR: Cannot connect to the exchange.';
-                            loadingElement.style.color = '#ff4c4c';
-                        }
                     });
             }
 
-            // Fetch immediately when the page loads, then every 4 seconds
             fetchMarketData();
             setInterval(fetchMarketData, 4000);
         });
 
-        // -----------------------------------------
-        // TRANSACTION FUNCTION: Locks in the order
-        // -----------------------------------------
+        // The exact same transaction logic we built previously
         async function buyProduct(productId, lockedPrice) {
-            // Ask the buyer for their bulk quantity
-            const quantityInput = prompt(`Locking in rate: ₹${lockedPrice}\n\nEnter the bulk quantity you wish to order:`, "100");
-            
-            // If they click 'Cancel' on the prompt, stop the function
+            const quantityInput = prompt(`ASSET ID: ${productId}\nLOCKED SPOT RATE: ₹${lockedPrice}\n\nEnter total unit volume for execution:`, "100");
             if (!quantityInput) return; 
 
-            // Convert their input to a proper number
             const quantity = parseInt(quantityInput, 10);
-            
             if (isNaN(quantity) || quantity <= 0) {
-                alert("❌ Invalid quantity. Please enter a valid number.");
+                alert("❌ Order Rejected: Invalid Volume.");
                 return;
             }
 
-            // Get the logged-in User ID (Defaults to 1 for testing if not logged in)
             const storedUserId = localStorage.getItem('user_id') || 1; 
 
-            // Send the secure POST request to the backend database
             try {
-                console.log("Processing transaction...");
-
                 const response = await fetch('/api/orders', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         user_id: storedUserId,
                         product_id: productId,
@@ -180,17 +302,15 @@
 
                 const result = await response.json();
 
-                // Handle the server's response
                 if (result.success) {
                     const totalCost = (lockedPrice * quantity).toLocaleString('en-IN');
-                    alert(`✅ ORDER CONFIRMED!\n\nOrder ID: #${result.orderId}\nQuantity: ${quantity}\nLocked Rate: ₹${lockedPrice}\nTotal: ₹${totalCost}`);
+                    alert(`✅ TRADE EXECUTED SUCCESSFULLY\n\nTransaction ID: #${result.orderId}\nAsset Volume: ${quantity}\nStrike Price: ₹${lockedPrice}\nTotal Settlement: ₹${totalCost}`);
                 } else {
-                    alert("❌ Transaction Failed. Please try again or contact support.");
+                    alert("❌ Trade Execution Failed.");
                 }
-
             } catch (error) {
                 console.error('Checkout error:', error);
-                alert("❌ Network error. Could not reach the trading floor servers.");
+                alert("❌ Connection to clearing house lost.");
             }
         }
     </script>
