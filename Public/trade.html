@@ -132,5 +132,75 @@
                 });
         });
     </script>
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // The exact route from your backend!
+            const apiUrl = '/api/products'; 
+
+            function fetchMarketData() {
+                fetch(apiUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.json();
+                    })
+                    .then(data => {
+                        // 1. Hide loading text, show the container
+                        document.getElementById('loading-text').style.display = 'none';
+                        document.getElementById('market-container').style.display = 'block';
+
+                        // 2. Grab the table body
+                        const tbody = document.getElementById('market-data-body');
+                        
+                        // Clear the old rows before adding the new ones
+                        tbody.innerHTML = ''; 
+
+                        if (!data || data.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No active listings found.</td></tr>';
+                            return;
+                        }
+
+                        // 3. Inject the live data
+                        data.forEach(item => {
+                            const row = document.createElement('tr');
+                            
+                            // Using the exact column names from your database logic
+                            row.innerHTML = `
+                                <td><strong>${item.name || 'Textile Item'}</strong></td>
+                                <td style="color: #28a745; font-weight: bold; font-size: 1.1rem;">
+                                    ₹${item.current_price || '0.00'}
+                                </td>
+                                <td>
+                                    <button class="btn-buy" onclick="buyProduct(${item.id}, ${item.current_price})">
+                                        Lock Rate & Buy
+                                    </button>
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        // Only show error if the table is completely hidden (first load)
+                        if (document.getElementById('market-container').style.display === 'none') {
+                            const loadingElement = document.getElementById('loading-text');
+                            loadingElement.innerText = 'ERROR: Cannot connect to the exchange.';
+                            loadingElement.style.color = '#ff4c4c';
+                        }
+                    });
+            }
+
+            // Fetch immediately when the page loads
+            fetchMarketData();
+
+            // Fetch repeatedly every 4 seconds to match your Trading Bot!
+            setInterval(fetchMarketData, 4000);
+        });
+
+        // Placeholder function for when you click "Lock Rate & Buy"
+        function buyProduct(productId, lockedPrice) {
+            alert(`Ready to buy Product ID: ${productId} at the locked rate of ₹${lockedPrice}. (Linking to checkout next!)`);
+        }
+    </script>
 </body>
 </html>
