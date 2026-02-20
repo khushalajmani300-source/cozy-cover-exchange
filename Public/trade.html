@@ -4,92 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cozy Cover B2B Exchange</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
-        :root { --bg-color: #0b0e14; --card-bg: #151a22; --primary: #8e44ad; --success: #00e676; --danger: #ff1744; --text-main: #ffffff; --text-muted: #8b9eb7; --border-color: #2b3544; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; padding-bottom: 50px; }
+        /* Dark Theme Styling matching your UI */
+        body { 
+            background-color: #1e1e24; 
+            color: #ffffff; 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+        }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 15px; 
+        }
+        .logo { font-weight: bold; font-size: 1.2rem; text-transform: uppercase; }
+        .logo span { color: #d63384; } /* Pink Accent */
+        .status-bar { display: flex; align-items: center; gap: 15px; }
+        .status { color: #28a745; font-size: 0.85rem; font-weight: bold; }
+        .btn-logout { 
+            background: #333; color: white; border: none; 
+            padding: 6px 12px; cursor: pointer; border-radius: 4px; 
+        }
+        .center-title { text-align: center; margin-top: 50px; }
+        .center-title h1 { margin-bottom: 5px; font-size: 1.8rem; }
+        .subtitle { color: #aaa; font-size: 0.9rem; }
         
-        /* NAVBAR */
-        .navbar { background-color: rgba(21, 26, 34, 0.95); border-bottom: 1px solid var(--border-color); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .brand { font-size: 20px; font-weight: 800; letter-spacing: 1px; color: var(--text-main); }
-        .brand-accent { color: var(--primary); }
-        .status-dot { height: 10px; width: 10px; background-color: var(--success); border-radius: 50%; display: inline-block; box-shadow: 0 0 8px var(--success); }
-        .logout-btn { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-        .logout-btn:hover { color: #fff; border-color: #fff; }
-
-        /* LIVE TICKER TAPE */
-        .ticker-wrap { width: 100%; overflow: hidden; background-color: #080a0f; border-bottom: 1px solid var(--border-color); padding: 10px 0; box-sizing: border-box; white-space: nowrap; }
-        .ticker { display: inline-block; white-space: nowrap; animation: ticker-scroll 30s linear infinite; }
-        .ticker:hover { animation-play-state: paused; }
-        .ticker-item { display: inline-block; padding: 0 30px; font-size: 14px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
-        .ticker-price { margin-left: 8px; font-family: monospace; font-size: 16px; }
-        @keyframes ticker-scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-
-        /* HEADER */
-        .page-header { text-align: center; padding: 30px 20px 20px; }
-        .page-header h1 { margin: 0; font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; }
-        .page-header p { color: var(--text-muted); margin-top: 10px; font-size: 14px; }
-
-        /* GRID LAYOUT */
-        .container { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; max-width: 1400px; margin: 0 auto; padding: 0 25px; }
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
-        .card h3 { margin: 0 0 15px 0; font-size: 18px; color: #fff; }
+        #loading-text { margin-top: 30px; font-size: 0.9rem; font-weight: bold; color: #ccc; }
         
-        /* PRICE SECTION */
-        .price-container { background: #0f131a; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #1f2733; display: flex; justify-content: space-between; align-items: center; }
-        .mrp-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
-        .mrp-value { font-size: 14px; color: #556b82; text-decoration: line-through; }
-        .live-label { font-size: 12px; color: var(--success); text-transform: uppercase; font-weight: bold; margin-bottom: 5px;}
-        .price { font-size: 28px; font-weight: bold; font-family: monospace; color: #fff; margin: 0;}
-
-        /* FLASH ANIMATIONS */
-        @keyframes flashGreen { 0% { background-color: rgba(0, 230, 118, 0.3); } 100% { background-color: #0f131a; } }
-        @keyframes flashRed { 0% { background-color: rgba(255, 23, 68, 0.3); } 100% { background-color: #0f131a; } }
-        .flash-up { animation: flashGreen 1s ease-out; }
-        .flash-down { animation: flashRed 1s ease-out; }
-
-        /* CHARTS & ACTIONS */
-        .chart-wrapper { height: 150px; width: 100%; margin-bottom: 20px; }
-        .action-row { display: flex; gap: 10px; margin-top: auto; }
-        .qty-input { width: 70px; padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: #0f131a; color: white; text-align: center; font-size: 16px; font-weight: bold; }
-        .buy-btn { flex: 1; background: var(--primary); color: white; border: none; padding: 12px; cursor: pointer; font-size: 16px; font-weight: bold; border-radius: 6px; }
-        .buy-btn:hover { background: #732d91; }
+        /* Table Styling for Market Data */
+        table { width: 100%; border-collapse: collapse; margin-top: 30px; background: #2a2a35; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #3a3a45; }
+        th { background: #222; color: #888; font-size: 0.85rem; text-transform: uppercase; }
+        .btn-buy { background: #007bff; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <script>
-        if(localStorage.getItem('dealer_access') !== 'granted') { window.location.href = '/'; }
-        function logout() { 
-            localStorage.removeItem('dealer_access'); 
-            localStorage.removeItem('dealer_id'); 
-            localStorage.removeItem('dealer_name'); 
-            window.location.href = '/'; 
-        }
-    </script>
-
-    <nav class="navbar">
-        <div class="brand">
-            <span class="brand-accent">AJMANI</span> B2B EXCHANGE
-        </div>
-        <div style="display:flex; align-items:center; gap: 15px;">
-            <span id="dealer-name-display" style="font-size: 14px; color: var(--primary); font-weight: bold; margin-right: 10px;"></span>
-            <span style="font-size: 13px; color: var(--text-muted);">
-                <span class="status-dot"></span> MARKET OPEN
-            </span>
-            <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-    </nav>
-
-    <div class="ticker-wrap">
-        <div class="ticker" id="market-ticker">
-            <span class="ticker-item">Loading Market Data...</span>
+    <div class="header">
+        <div class="logo"><span>Ajmani</span> B2B Exchange</div>
+        <div class="status-bar">
+            <span class="status">🟢 MARKET OPEN</span>
+            <button class="btn-logout">Logout</button>
         </div>
     </div>
 
-    <header class="page-header">
-        <h1>Cozy Cover Trading Floor</h1>
-        <p>Live fluctuating wholesale rates. Lock in your bulk orders below.</p>
-    </header>
+    <div class="center-title">
+        <h1>COZY COVER TRADING FLOOR</h1>
+        <p class="subtitle">Live fluctuating wholesale rates. Lock in your bulk orders below.</p>
+    </div>
 
-    <div id="market" class="container">
+    <div id="loading-text">LOADING MARKET DATA...</div>
+
+    <div id="market-container" style="display: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Wholesale Rate (INR)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="market-data-body">
+                </tbody>
+        </table>
+        
+        <div style="margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto;">
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 🛑 IMPORTANT: Change this URL to your actual Render backend API route!
+            // Example: '/api/rates' or '/products' or whatever route sends your JSON data
+            const apiUrl = '/api/rates'; 
+
+            // 1. Tell the browser to go fetch the data
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Server responded with an error');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 2. The data arrived successfully! Hide the loading text.
+                    document.getElementById('loading-text').style.display = 'none';
+                    
+                    // 3. Unhide the table container so the user can see it
+                    document.getElementById('market-container').style.display = 'block';
+
+                    // 4. Inject the data into the HTML table
+                    const tbody = document.getElementById('market-data-body');
+                    
+                    // If database is empty
+                    if (!data || data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No active listings found on the floor today.</td></tr>';
+                        return;
+                    }
+
+                    // Loop through the data and create a row for each textile product
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        
+                        // Adjust 'item.name' and 'item.price' to match your database column names
+                        row.innerHTML = `
+                            <td><strong>${item.name || 'Textile Item'}</strong></td>
+                            <td style="color: #28a745; font-weight: bold;">₹${item.price || '0.00'}</td>
+                            <td><button class="btn-buy">Buy Bulk</button></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    // If the backend fails, change the loading text to a red error message
+                    console.error('Fetch error:', error);
+                    const loadingElement = document.getElementById('loading-text');
+                    loadingElement.innerText = 'ERROR: Could not connect to the trading floor API.';
+                    loadingElement.style.color = '#ff4c4c'; 
+                });
+        });
+    </script>
+</body>
+</html>
